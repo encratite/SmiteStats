@@ -48,7 +48,7 @@ namespace SmiteStats
 
 		void PlayerTask(string playerName, string playerUri, List<int> differencesOutput)
 		{
-			int winLossDifference = GetPlayerWinLossDiffernce(playerUri);
+			int winLossDifference = GetPlayerWinLossDifference(playerUri);
 			lock (differencesOutput)
 			{
 				Console.WriteLine("{0}: {1}", playerName, winLossDifference.ToString(_DifferenceFormat));
@@ -74,7 +74,7 @@ namespace SmiteStats
 			return output;
 		}
 
-		int GetPlayerWinLossDiffernce(string uri)
+		int GetPlayerWinLossDifference(string uri)
 		{
 			var document = Download(uri);
 			var container = document.DocumentNode.SelectSingleNode("//div[@id = 'conquestTab']");
