@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace SmiteStats
 {
@@ -24,6 +25,7 @@ namespace SmiteStats
 			var document = Download(uri);
 			var nodes = document.DocumentNode.SelectNodes("//a[@id = 'pdName' and starts-with(@href, 'stats.aspx?player=')]");
 			var differences = new List<int>();
+			var tasks = new List<Task>();
 			foreach (var node in nodes)
 			{
 				string path = node.Attributes["href"].Value;
@@ -33,13 +35,25 @@ namespace SmiteStats
 					throw new ApplicationException("Unable to extract player name");
 				string playerName = match.Groups[1].Value;
 				string playerUri = string.Format("{0}/{1}", _Prefix, path);
-				int winLossDifference = GetPlayerWinLossDiffernce(playerUri);
-				Console.WriteLine("{0}: {1}", playerName, winLossDifference.ToString(_DifferenceFormat));
-				differences.Add(winLossDifference);
+				var task = new Task(() => PlayerTask(playerName, playerUri, differences));
+				tasks.Add(task);
+				task.Start();
 			}
+			foreach (var task in tasks)
+				task.Wait();
 			differences.Sort();
 			double median = GetMedian(differences);
 			Console.WriteLine("Median: {0}", median.ToString(_DifferenceFormat));
+		}
+
+		void PlayerTask(string playerName, string playerUri, List<int> differencesOutput)
+		{
+			int winLossDifference = GetPlayerWinLossDiffernce(playerUri);
+			lock (differencesOutput)
+			{
+				Console.WriteLine("{0}: {1}", playerName, winLossDifference.ToString(_DifferenceFormat));
+				differencesOutput.Add(winLossDifference);
+			}
 		}
 
 		double GetMedian(List<int> input)
