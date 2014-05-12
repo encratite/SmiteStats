@@ -2,12 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace SmiteStats
 {
 	class Analysis
 	{
 		const string _Prefix = "http://account.hirezstudios.com/smitegame";
+		const string _DifferenceFormat = "+#;-#";
 
 		int _MatchId;
 
@@ -25,14 +27,19 @@ namespace SmiteStats
 			foreach (var node in nodes)
 			{
 				string path = node.Attributes["href"].Value;
+				var pattern = new Regex("^stats\\.aspx\\?player=(.+)$");
+				var match = pattern.Match(path);
+				if (match == null)
+					throw new ApplicationException("Unable to extract player name");
+				string playerName = match.Groups[1].Value;
 				string playerUri = string.Format("{0}/{1}", _Prefix, path);
 				int winLossDifference = GetPlayerWinLossDiffernce(playerUri);
-				Console.WriteLine("{0}: {1}{2}", path, winLossDifference > 0 ? "+" : "", winLossDifference);
+				Console.WriteLine("{0}: {1}", playerName, winLossDifference.ToString(_DifferenceFormat));
 				differences.Add(winLossDifference);
 			}
 			differences.Sort();
 			double median = GetMedian(differences);
-			Console.WriteLine("Median: {0}", median);
+			Console.WriteLine("Median: {0}", median.ToString(_DifferenceFormat));
 		}
 
 		double GetMedian(List<int> input)
@@ -96,7 +103,7 @@ namespace SmiteStats
 
 		HtmlDocument Download(string uri)
 		{
-			Console.WriteLine("Downloading {0}", uri);
+			// Console.WriteLine("Downloading {0}", uri);
 			var client = new WebClient();
 			string content = client.DownloadString(new Uri(uri));
 			var document = new HtmlDocument();
