@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -119,6 +120,7 @@ namespace SmiteStats
 		{
 			// Console.WriteLine("Downloading {0}", uri);
 			var client = new WebClient();
+			client.Encoding = Encoding.UTF8;
 			string content = client.DownloadString(new Uri(uri));
 			var document = new HtmlDocument();
 			document.LoadHtml(content);
